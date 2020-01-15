@@ -13,6 +13,7 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.stacktrace :refer [wrap-stacktrace]]
+            [ring.util.codec :as codec]
             [ring.util.response :as response]))
 
 (def data
@@ -44,6 +45,7 @@
 
     :else
     (pr-str v)))
+
 (defn render-coll [data]
   [:ul
    (for [v data]
@@ -73,6 +75,48 @@
      [:style "body > ul > li { border-top: 2px solid black }"]]
     [:body
      (render data)]]))
+
+(defn str->int
+  [x]
+  (if (string? x)
+    (Integer/parseInt x 10)
+    x))
+
+(defn request->url
+  [{:keys [uri params]}]
+  (if (seq params)
+    (str uri "?" (codec/form-encode params))
+    uri))
+
+(defn wrap-pagination
+  "Sort and paginate response content"
+  [f]
+  (fn [{{:strs [pageSize pageNumber order]} :params :keys [uri] :as request}]
+    (let [pageSize                    (or (str->int pageSize) 10)
+          pageNumber                  (or (str->int pageNumber) 0)
+          order                       (or order "name")
+          {:keys [body] :as response} (-> request
+                                          (update :params dissoc "pageSize" "pageNumber" "order")
+                                          f)]
+      (if (sequential? body)
+        (let [pages (->> body
+                         (sort-by #(get % order))
+                         (partition-all pageSize))]
+          (assoc response :body {:_embedded {:items (nth pages pageNumber)}
+                                 :_links    (cond-> {:self {:href (request->url request)}}
+                                              (> 0 pageNumber)
+                                              (assoc :prev {:href (-> request
+                                                                      (assoc-in :params "pageNumber" (dec pageNumber))
+                                                                      request->url)})
+
+                                              (< pageNumber (dec (count pages)))
+                                              (assoc :next {:href (-> request
+                                                                      (assoc-in :params "pageNumber" (inc pageNumber))
+                                                                      request->url)}))
+                                 :pageSize   pageSize
+                                 :pageNumber pageNumber}))
+        response))))
+
 
 (defn app [{:keys [uri params] :as request}]
   (let [[_ root member] (re-find #"^(/.*?)(/.*)?$" uri)
@@ -115,9 +159,10 @@
   [f validator]
   (fn [{:keys [params] :as request}]
     (let [response (f request)]
-      (doseq [{:keys [level] :as m} (validator/validate-interaction validator (dissoc request :body) response)]
-        (when-not (= :ignore level)
-          (log/log level (prn-str m))))
+      (when-not (get params "html")
+        (doseq [{:keys [level] :as m} (validator/validate-interaction validator (dissoc request :body) response)]
+          (when-not (= :ignore level)
+            (log/log level (prn-str m)))))
       response)))
 
 (defonce server-atom (atom nil))
@@ -133,6 +178,7 @@
         port (Integer/parseInt (get (System/getenv) "PORT" "8080"))]
     (reset! server-atom
             (run-jetty (-> #'app
+                           wrap-pagination
                            wrap-html-response
                            wrap-json-response
                            (wrap-validator (validator/openapi-validator "/public/ooapi.json" {:base-path (str "http://" host ":" port "/")}))
