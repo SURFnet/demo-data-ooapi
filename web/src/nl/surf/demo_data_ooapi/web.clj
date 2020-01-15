@@ -94,7 +94,7 @@
   (fn [{{:strs [pageSize pageNumber order]} :params :keys [uri] :as request}]
     (let [pageSize                    (or (str->int pageSize) 10)
           pageNumber                  (or (str->int pageNumber) 0)
-          order                       (or order "name")
+          order                       (keyword (or order "name"))
           {:keys [body] :as response} (-> request
                                           (update :params dissoc "pageSize" "pageNumber" "order")
                                           f)]
@@ -104,14 +104,14 @@
                          (partition-all pageSize))]
           (assoc response :body {:_embedded {:items (nth pages pageNumber)}
                                  :_links    (cond-> {:self {:href (request->url request)}}
-                                              (> 0 pageNumber)
+                                              (< 0 pageNumber)
                                               (assoc :prev {:href (-> request
-                                                                      (assoc-in :params "pageNumber" (dec pageNumber))
+                                                                      (assoc-in [:params "pageNumber"] (dec pageNumber))
                                                                       request->url)})
 
                                               (< pageNumber (dec (count pages)))
                                               (assoc :next {:href (-> request
-                                                                      (assoc-in :params "pageNumber" (inc pageNumber))
+                                                                      (assoc-in [:params "pageNumber"] (inc pageNumber))
                                                                       request->url)}))
                                  :pageSize   pageSize
                                  :pageNumber pageNumber}))
