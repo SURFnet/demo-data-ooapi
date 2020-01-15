@@ -11,7 +11,7 @@
                  [ring/ring-jetty-adapter "1.8.0"]
                  [ring/ring-json "0.5.0"]
                  [ring/ring-devel "1.8.0"]]
-  :repl-options {:init-ns nl.surf.demo-data-openapi.web}
+  :repl-options {:init-ns nl.surf.demo-data-ooapi.web}
   :resource-paths ["resources" "generated"])
 
 
