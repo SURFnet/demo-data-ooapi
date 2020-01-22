@@ -15,11 +15,7 @@
 
 (defmethod config/generator "course-ects" [_]
   (fn course-ects [world]
-    (- 60 (* 2.5 ((gen/int-cubic 1 24) world)))))
-
-(defmethod config/generator "length-of-programme" [_]
-  (fn length-of-programme [_ ects]
-    (-> ects (/ 60) (* 12) int)))
+    (int (- 60 (* 2.5 ((gen/int-cubic 1 24) world))))))
 
 ;; TODO move to demo-data repo
 (defmethod config/generator "object" [_]
@@ -67,7 +63,8 @@
 (def config
   {:types [{:name       "service"
             :refs       {:institution {:deps ["institution/institutionId"]}}
-            :attributes {:serviceId     {:generator   "id"
+            :attributes {:serviceId     {:hidden      true
+                                         :generator   "id"
                                          :constraints ["unique"]}
                          :owner         {:deps [["service/institution" "institution/name"]]}
                          :logo          {:value "https://example.com/logo.png"}
@@ -113,8 +110,8 @@
                                                   :generator ["one-of" ["Universiteit" "Hogeschool" "Academie"]]}
                          :logo                   {:generator ["format" "https://%s/images/logo.png"]
                                                   :deps      ["institution/domain"]}
-                         :address                {:generator ["object" :street :zip :city :country]
-                                                  :deps      ["institution/_street" "institution/_zip" "institution/city" "institution/_country"]}
+                         :address                {:generator ["object" :street :zip :city :countryCode]
+                                                  :deps      ["institution/_street" "institution/_zip" "institution/city" "institution/_countryCode"]}
                          :_street_name           {:hidden    true
                                                   :generator ["one-of-resource-lines" "nl/street-names.txt"]}
                          :_house_number          {:hidden    true
@@ -133,7 +130,8 @@
                                                   :deps      ["institution/_zip_digits" "institution/_zip_letter_1" "institution/_zip_letter_2"]}
                          :city                   {:hidden    true
                                                   :generator ["one-of-resource-lines" "nl/city-names.txt"]}
-                         :_country               {:value "NL"}}}
+                         :_countryCode           {:hidden true
+                                                  :value  "NL"}}}
 
            {:name       "educational-programme"
             :refs       {:service {:deps ["service/serviceId"]}}
@@ -172,8 +170,6 @@
                                                                              "GB-en" 1}]}
                          :qualificationAwarded      {:deps      ["educational-programme/levelOfQualification" "educational-programme/name"]
                                                      :generator ["format" "%s of %s"]}
-                         :lengthOfProgramme         {:generator "length-of-programme"
-                                                     :deps      ["educational-programme/ects"]}
                          :levelOfQualification      {:deps      [["educational-programme/service" "service/courseLevels"]]
                                                      :generator "one-of"}
                          :profileOfProgramme        {:generator "lorum-ipsum"}
@@ -199,7 +195,8 @@
                        :attributes ["course" "educational-programme"]}}}
 
            {:name       "course"
-            :refs       {:service     {:deps ["service/serviceId"]}
+            :refs       {:service     {:hidden true
+                                       :deps   ["service/serviceId"]}
                          :coordinator {:deps ["person/personId"]}}
             :attributes {:courseId         {:generator   "id"
                                             :constraints ["unique"]}
@@ -231,15 +228,16 @@
                          :description      {:generator "lorum-ipsum"}
                          :learningOutcomes {:generator "lorum-ipsum"}
                          :goals            {:generator "lorum-ipsum"}
-                         :requirements     {:generator "course-requirements"
+                         :requirements     {:optional  true
+                                            :generator "course-requirements"
                                             :deps      ["course/name"]}
                          :level            {:generator "one-of"
                                             :deps      [["course/service" "service/courseLevels"]]}
-                         :format           {:generator ["weighted" {"practicum"   1
-                                                                    "hoorcollege" 1}]}
-                         :modeOfDelivery   {:generator ["weighted-set" {"e-learning"   1
-                                                                        "face-to-face" 2
-                                                                        "class-room"   20}]}
+                         :format           {:generator ["weighted-set" {"practicum"   1
+                                                                        "hoorcollege" 1}]}
+                         :modeOfDelivery   {:generator ["weighted" {"e-learning"   1
+                                                                    "face-to-face" 2
+                                                                    "class-room"   20}]}
                          :mainLanguage     {:generator ["weighted" {"NL-nl" 5
                                                                     "GB-en" 1}]}
                          :enrollment       {:generator "lorum-ipsum"}
@@ -292,7 +290,8 @@
                                                         "nl/surf/demo_data_ooapi/first-names.txt"]}
                          :surname          {:generator ["one-of-resource-lines"
                                                         "nl/surf/demo_data_ooapi/last-names.txt"]}
-                         :surnamePrefix    {:generator ["weighted" {nil       50
+                         :surnamePrefix    {:optional  true
+                                            :generator ["weighted" {nil       50
                                                                     "van"     3
                                                                     "van de"  3
                                                                     "van het" 3
@@ -333,7 +332,8 @@
                                                                     "F" 50
                                                                     "X" 2
                                                                     "U" 2}]}
-                         :title            {:generator ["weighted" {nil     50
+                         :title            {:optional  true
+                                            :generator ["weighted" {nil     50
                                                                     "dr."   4
                                                                     "mr."   4
                                                                     "ir."   4
@@ -412,10 +412,11 @@
                               :pre        (fn [e _]
                                             (assoc e :_links {:self                   {:href "/institution"}
                                                               :educational-programmes {:href "/educational-programmes"}}))}
-   "/educational-programmes" {:type :educational-programme
-                              :pre  (fn [{:educational-programme/keys [educationalProgrammeId] :as e} _]
-                                      (assoc e :_links {:self    {:href (str "/educational-programmes/" educationalProgrammeId)}
-                                                        :courses {:href (str "/courses?educationalProgramme=" educationalProgrammeId)}}))}
+   "/educational-programmes" {:type       :educational-programme
+                              :attributes {:educational-programme/service {:hidden? true}}
+                              :pre        (fn [{:educational-programme/keys [educationalProgrammeId] :as e} _]
+                                            (assoc e :_links {:self    {:href (str "/educational-programmes/" educationalProgrammeId)}
+                                                              :courses {:href (str "/courses?educationalProgramme=" educationalProgrammeId)}}))}
    "/course-offerings"       {:type       :course-offering
                               :attributes {:course-offering/course {:follow-ref? true
                                                                     :attributes  {:course/educationalProgramme {:hidden? true}}}}
@@ -423,22 +424,25 @@
                                             (assoc e :_links {:self      {:href (str "/course-offerings/" courseOfferingId)}
                                                               :lecturers (mapv person-link
                                                                                (lecturers-for-offering world courseOfferingId))}))}
-   "/persons"                {:type :person
-                              :pre  (fn [{:person/keys [personId] :as e} _]
-                                      (assoc e :_links {:self {:href (str "/persons/" personId)}}
+   "/persons"                {:type       :person
+                              :attributes {:person/institution {:hidden? true}}
+                              :pre        (fn [{:person/keys [personId displayName] :as e} _]
+                                            (assoc e :_links {:self {:href (str "/persons/" personId)}}
                                         ; link to courses not
                                         ; implemented because that
                                         ; only supports students
-                                             ))}
+                                                   ))}
    "/courses"                {:type       :course
-                              :attributes {:course/coordinator {:hidden? true}}
+                              :attributes {:course/coordinator {:hidden? true}
+                                           :course/service     {:hidden? true}}
                               :pre        (fn [{:course/keys [courseId coordinator] :as e} world]
                                             (assoc e :_links {:self                  {:href (str "/courses/" courseId)}
                                                               :coordinator           (person-link (world/get-entity world coordinator))
                                                               :lecturers             (map person-link (lecturers-for-course world courseId))
                                                               :courseOfferings       {:href (str "/course-offerings?course=" courseId)}
                                                               :educationalProgrammes (map (fn [programme]
-                                                                                            {:href (str "/educational-programmes/" (:educational-programme/educationalProgrammeId programme))})
+                                                                                            {:title (:educational-programme/name programme)
+                                                                                             :href  (str "/educational-programmes/" (:educational-programme/educationalProgrammeId programme))})
                                                                                           (programmes-for-course world courseId))}))}})
 
 (def data
