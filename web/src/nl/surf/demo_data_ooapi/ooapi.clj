@@ -123,18 +123,18 @@
      :generator bijbel-bla}
     {:name      :educational-programme/termStartDate
      :generator (fn [world]
-                  (date-util/nth-weekday-of 0 date-util/monday
-                                            ((gen/int 1990 2018) world)
-                                            ((gen/one-of [date-util/september date-util/february]) world)))}
+                  (date-util/nth-weekday-of 0 "monday"
+                                            ((gen/one-of ["september" "february"]) world)
+                                            ((gen/int 1990 2018) world)))}
     {:name      :educational-programme/termEndDate
      :optional  true
      :generator (fn [{[start-date] :dep-vals :as world}]
                   (let [max-year   2018
-                        start-year (inc (date-util/get start-date date-util/year))]
+                        start-year (inc (date-util/get start-date "year"))]
                     (when (and (< start-year max-year)
                                (= 0 ((gen/int 0 4) world)))
                       (let [year ((gen/int start-year max-year) world)]
-                        (date-util/last-day-of year ((gen/one-of [date-util/august date-util/january]) world))))))
+                        (date-util/last-day-of ((gen/one-of ["august" "january"] world)) year)))))
      :deps      [[:educational-programme/termStartDate]]}
     {:name      :educational-programme/ects
      :deps      [[:educational-programme/levelOfQualification]]
