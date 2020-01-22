@@ -1,8 +1,10 @@
 (ns nl.surf.demo-data-ooapi.config
-  (:require [clojure.string :as s]
+  (:require [clojure.data.generators :as dgen]
+            [clojure.string :as s]
             [nl.surf.demo-data.config :as config]
-            [nl.surf.demo-data.generators :as gen]
             [nl.surf.demo-data.date-util :as date-util]
+            [nl.surf.demo-data.export :as export]
+            [nl.surf.demo-data.generators :as gen]
             [nl.surf.demo-data.world :as world]))
 
 (defmethod config/generator "programme-ects" [_]
@@ -356,21 +358,100 @@
                          :_office6         {:hidden    true
                                             :generator ["char" "0" "9"]}}}]})
 
-(comment
-  (->> (config/load config)
-       (filter :hidden)
-       (map :name))
-  (->> (world/gen (config/load config)
-                  {:service               1
-                   :institution           1
-                   :educational-programme 2
-                   :course-programme      30
-                   :course                20
-                   :lecturer              30
-                   :course-offering       30
-                   :person                30})
 
+(defn lecturers-for-offering
+  [world course-offering-id]
+  (keep (fn [{[_ courseOfferingId] :lecturer/courseOffering
+              person :lecturer/person}]
+          (when (= course-offering-id courseOfferingId)
+            (world/get-entity world person)))
+        (:lecturer world)))
 
-       :course
-       (map #(select-keys % [:course/name])))
-  )
+(defn offerings-for-course
+  [world course-id]
+  (->> world
+       :course-offering
+       (filter #(= (second (:course-offering/course %)) course-id))))
+
+(defn lecturers-for-course
+  [world course-id]
+  (->> course-id
+       (offerings-for-course world)
+       (map :course-offering/courseOfferingId)
+       (mapcat #(lecturers-for-offering world %))
+       set))
+
+(defn programmes-for-course
+  [world course-id]
+  (keep (fn [{[_ courseId]    :course-programme/course
+              programme :course-programme/educational-programme}]
+          (when (= course-id courseId)
+            (world/get-entity world programme)))
+        (:course-programme world)))
+
+(defn person-link
+  [{:person/keys [displayName personId]}]
+  {:href  (str "/persons/" personId)
+   :title displayName})
+
+(def export-conf
+  {"/"                       {:type       :service
+                              :singleton? true
+                              :attributes {:service/institution {:hidden? true}}
+                              :pre        (fn [e _]
+                                            (assoc e :_links {:self      {:href "/"}
+                                                              :endpoints [{:href "/institution"}
+                                                                          {:href "/educational-programmes"}
+                                                                          {:href "/course-offerings"}
+                                                                          {:href "/persons"}
+                                                                          {:href "/courses"}]}))}
+   "/institution"            {:type       :institution
+                              :singleton? true
+                              :attributes {:institution/addressCity {:hidden? true}
+                                           :institution/domain      {:hidden? true}}
+                              :pre        (fn [e _]
+                                            (assoc e :_links {:self                   {:href "/institution"}
+                                                              :educational-programmes {:href "/educational-programmes"}}))}
+   "/educational-programmes" {:type :educational-programme
+                              :pre  (fn [{:educational-programme/keys [educationalProgrammeId] :as e} _]
+                                      (assoc e :_links {:self    {:href (str "/educational-programmes/" educationalProgrammeId)}
+                                                        :courses {:href (str "/courses?educationalProgramme=" educationalProgrammeId)}}))}
+   "/course-offerings"       {:type       :course-offering
+                              :attributes {:course-offering/course {:follow-ref? true
+                                                                    :attributes  {:course/educationalProgramme {:hidden? true}}}}
+                              :pre        (fn [{:course-offering/keys [courseOfferingId] :as e} world]
+                                            (assoc e :_links {:self      {:href (str "/course-offerings/" courseOfferingId)}
+                                                              :lecturers (mapv person-link
+                                                                               (lecturers-for-offering world courseOfferingId))}))}
+   "/persons"                {:type :person
+                              :pre  (fn [{:person/keys [personId] :as e} _]
+                                      (assoc e :_links {:self {:href (str "/persons/" personId)}}
+                                        ; link to courses not
+                                        ; implemented because that
+                                        ; only supports students
+                                             ))}
+   "/courses"                {:type       :course
+                              :attributes {:course/coordinator {:hidden? true}}
+                              :pre        (fn [{:course/keys [courseId coordinator] :as e} world]
+                                            (assoc e :_links {:self                  {:href (str "/courses/" courseId)}
+                                                              :coordinator           (person-link (world/get-entity world coordinator))
+                                                              :lecturers             (map person-link (lecturers-for-course world courseId))
+                                                              :courseOfferings       {:href (str "/course-offerings?course=" courseId)}
+                                                              :educationalProgrammes (map (fn [programme]
+                                                                                            {:href (str "/educational-programmes/" (:educational-programme/educationalProgrammeId programme))})
+                                                                                          (programmes-for-course world courseId))}))}})
+
+(def data
+  (binding [dgen/*rnd* (java.util.Random. 42)]
+    (-> config
+        (config/load)
+        (world/gen {:service               1
+                    :institution           1
+                    :educational-programme 2
+                    :course-programme      8
+                    :course                5
+                    :lecturer              20
+                    :course-offering       10
+                    :person                15})
+        (export/export
+         export-conf))))
