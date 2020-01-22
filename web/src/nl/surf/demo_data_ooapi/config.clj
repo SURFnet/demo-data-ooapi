@@ -1,11 +1,37 @@
 (ns nl.surf.demo-data-ooapi.config
   (:require [clojure.data.generators :as dgen]
+            [clojure.java.io :as io]
             [clojure.string :as s]
             [nl.surf.demo-data.config :as config]
             [nl.surf.demo-data.date-util :as date-util]
             [nl.surf.demo-data.export :as export]
             [nl.surf.demo-data.generators :as gen]
-            [nl.surf.demo-data.world :as world]))
+            [nl.surf.demo-data.world :as world]
+            [remworks.markov-chain :as mc]))
+
+(def text-spaces (->> "data.edn"
+                      io/resource
+                      slurp
+                      read-string
+                      (map #(dissoc % :id :field-of-study))
+                      (reduce (fn [m x]
+                                (merge-with (fn [a b]
+                                              (let [b (s/replace (str b) #"<[^>]+>" "")]
+                                                (if (s/ends-with? a ".")
+                                                  (str a " " b)
+                                                  (str a ". " b))))
+                                            m x))
+                              {})
+                      (map (fn [[k v]]
+                             [(name k) (mc/analyse-text v)]))
+                      (into {})))
+
+(defmethod config/generator "lorum-surf" [_]
+  (fn surf-lorem [world & [scope lines]]
+    (let [space (get text-spaces scope (get text-spaces "description"))]
+      (->> #(mc/generate-text space)
+           (repeatedly (or lines 3))
+           (s/join " ")))))
 
 (defmethod config/generator "programme-ects" [_]
   (fn programme-ects [world level]
@@ -94,7 +120,7 @@
                          :_domainBase            {:hidden    true
                                                   :generator "sanitize"
                                                   :deps      ["institution/name"]}
-                         :description            {:generator "lorum-ipsum"}
+                         :description            {:generator "lorum-surf"}
                          :academicCalendar       {:generator ["object" :year]
                                                   :deps      ["institution/_academicCalendarYear"]}
                          :_academicCalendarYear  {:hidden    true
@@ -137,9 +163,9 @@
             :refs       {:service {:deps ["service/serviceId"]}}
             :attributes {:educationalProgrammeId    {:generator   "id"
                                                      :constraints ["unique"]}
-                         :name                      {:deps      ["educational-programme/fieldsOfStudy"]
-                                                     :generator ["one-of-keyed-resource" "nl/programme-names.yml"]}
-                         :description               {:generator "lorum-ipsum"}
+                         :name                      {:generator ["one-of-keyed-resource" "nl/programme-names.yml"]
+                                                     :deps      ["educational-programme/fieldsOfStudy"]}
+                         :description               {:generator "lorum-surf"}
                          :termStartDate             {:generator ["first-weekday-of" "monday"]
                                                      :deps      ["educational-programme/_termStartYear" "educational-programme/_termStartMonth"]}
                          :_termMinYear              {:hidden true
@@ -172,8 +198,8 @@
                                                      :generator ["format" "%s of %s"]}
                          :levelOfQualification      {:deps      [["educational-programme/service" "service/courseLevels"]]
                                                      :generator "one-of"}
-                         :profileOfProgramme        {:generator "lorum-ipsum"}
-                         :programmeLearningOutcomes {:generator "lorum-ipsum"}
+                         :profileOfProgramme        {:generator "lorum-surf"}
+                         :programmeLearningOutcomes {:generator ["lorum-surf" "learningOutcomes"]}
                          :modeOfStudy               {:generator ["weighted" {"full-time"  5
                                                                              "part-time"  2
                                                                              "dual"       1
@@ -225,9 +251,9 @@
                                             :deps        ["course/name"]
                                             :constraints ["unique"]}
                          :ects             {:generator "course-ects"}
-                         :description      {:generator "lorum-ipsum"}
-                         :learningOutcomes {:generator "lorum-ipsum"}
-                         :goals            {:generator "lorum-ipsum"}
+                         :description      {:generator "lorum-surf"}
+                         :learningOutcomes {:generator ["lorum-surf" "learningOutcomes" 1]}
+                         :goals            {:generator ["lorum-surf" "goals"]}
                          :requirements     {:optional  true
                                             :generator "course-requirements"
                                             :deps      ["course/name"]}
@@ -240,9 +266,9 @@
                                                                     "class-room"   20}]}
                          :mainLanguage     {:generator ["weighted" {"NL-nl" 5
                                                                     "GB-en" 1}]}
-                         :enrollment       {:generator "lorum-ipsum"}
-                         :resources        {:generator "lorum-ipsum"}
-                         :exams            {:generator "lorum-ipsum"}
+                         :enrollment       {:generator ["lorum-surf" "enrollment"]}
+                         :resources        {:generator ["lorum-surf" "resources"]}
+                         :exams            {:generator ["lorum-surf" "exams"]}
                          :schedule         {:generator ["weighted" {"1e periode" 2
                                                                     "2e periode" 2
                                                                     "3e periode" 2
