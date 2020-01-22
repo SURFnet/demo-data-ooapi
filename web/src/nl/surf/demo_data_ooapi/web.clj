@@ -128,8 +128,9 @@
                                   #(= (str (get % id)) member)
                                   identity)
                                 params)
-        body            (cond->> (get ooapi/data root)
-                          true
+        body            (get ooapi/data root)
+        body            (cond->> body
+                          (sequential? body)
                           (filter filter-fn)
                           member
                           (first))]
