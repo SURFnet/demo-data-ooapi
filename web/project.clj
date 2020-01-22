@@ -1,7 +1,8 @@
 (defproject nl.surf/demo-data-ooapi "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
-  :dependencies [[hiccup "1.0.5"]
+  :dependencies [[camel-snake-kebab "0.4.1"]
+                 [hiccup "1.0.5"]
                  [log4j/log4j "1.2.17"]
                  [nl.surf/demo-data "0.1.0-SNAPSHOT"]
                  [nl.zeekat/ring-openapi-validator "0.1.0"]

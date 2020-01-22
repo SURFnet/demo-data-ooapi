@@ -1,5 +1,5 @@
 (ns nl.surf.demo-data-ooapi.web
-  (:require [clojure.data.generators :as dgen]
+  (:require [camel-snake-kebab.core :refer [->camelCase]]
             [clojure.java.io :as io]
             [clojure.string :as s]
             [clojure.tools.logging :as log]
@@ -15,18 +15,6 @@
             [ring.middleware.stacktrace :refer [wrap-stacktrace]]
             [ring.util.codec :as codec]
             [ring.util.response :as response]))
-
-(def data
-  (binding [dgen/*rnd* (java.util.Random. 42)]
-    (export/export (world/gen ooapi/attributes {:service               1
-                                                :institution           1
-                                                :educational-programme 2
-                                                :course-programme      8
-                                                :course                5
-                                                :lecturer              20
-                                                :course-offering       10
-                                                :person                15})
-                   ooapi/export-conf)))
 
 (def queries
   {"/courses" {"educationalProgramme" (fn [programme-id]
@@ -102,7 +90,9 @@
         (let [pages (->> body
                          (sort-by #(get % order))
                          (partition-all pageSize))]
-          (assoc response :body {:_embedded {:items (nth pages pageNumber)}
+          (assoc response :body {:_embedded {:items (if (< pageNumber (count pages))
+                                                      (nth pages pageNumber)
+                                                      [])}
                                  :_links    (cond-> {:self {:href (request->url request)}}
                                               (< 0 pageNumber)
                                               (assoc :prev {:href (-> request
@@ -121,6 +111,11 @@
 (defn app [{:keys [uri params] :as request}]
   (let [[_ root member] (re-find #"^(/.*?)(/.*)?$" uri)
         member          (when member (s/replace member #"^/" ""))
+        resource-type   (-> root
+                            (s/replace #"/" "")
+                            (s/replace #"s$" "")
+                            (->camelCase))
+        id              (keyword (str resource-type "Id"))
         filter-fn       (reduce (fn [m [k v]]
                                   (if (seq v)
                                     (if-let [query (get-in queries [root k])]
@@ -130,13 +125,14 @@
                                         #(and (m %) (= v (str (get % k))))))
                                     identity))
                                 (if member
-                                  #(= (str (:id %)) member)
+                                  #(= (str (get % id)) member)
                                   identity)
                                 params)
-        body            (get data root)
-        body            (if (sequential? body)
-                          (filter filter-fn body)
-                          body)]
+        body            (cond->> (get ooapi/data root)
+                          true
+                          (filter filter-fn)
+                          member
+                          (first))]
     {:status 200
      :body   body}))
 

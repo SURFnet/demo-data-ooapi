@@ -3,3 +3,4 @@ web/checkouts
 web/.nrepl-port
 web/target
 web/log
+web/.lein-*

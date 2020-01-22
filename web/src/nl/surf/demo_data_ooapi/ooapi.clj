@@ -1,12 +1,12 @@
 (ns nl.surf.demo-data-ooapi.ooapi
-  (:require [clojure.set :as set]
+  (:require [clojure.data.generators :as dgen]
+            [clojure.set :as set]
             [clojure.string :as s]
             [nl.surf.demo-data.constraints :as constraints]
             [nl.surf.demo-data.date-util :as date-util]
             [nl.surf.demo-data.export :as export]
             [nl.surf.demo-data.generators :as gen]
             [nl.surf.demo-data.world :as world]))
-
 
 (def programme-names-by-field-of-study (-> "nl/surf/demo_data_ooapi/programme-names.yml" gen/yaml-resource))
 (def fields-of-study (keys programme-names-by-field-of-study))
@@ -44,6 +44,9 @@
               (gen/char \A \Z)
               (gen/char \A \Z)))
 
+(def id-generator
+  (gen/format "%d" (gen/int 1 Integer/MAX_VALUE)))
+
 (defn faculity-member? [affiliations]
   (seq (set/intersection #{"employee" "staff"} affiliations)))
 
@@ -65,13 +68,13 @@
     {:name      :service/roomTypes
      :generator (constantly ["General purpose", "Lecture hall" , "PC lab"])}
     {:name      :service/institution
-     :deps      [[:institution/id]]
+     :deps      [[:institution/institutionId]]
      :generator (world/pick-ref)}
 
     ;;;;;;;;;;;;;;;;;;;;
 
-    {:name        :institution/id
-     :generator   (gen/int)
+    {:name        :institution/institutionId
+     :generator   id-generator
      :constraints [constraints/unique]}
     {:name      :institution/brin
      :generator brin-generator}
@@ -88,23 +91,29 @@
     {:name      :institution/description
      :generator bijbel-bla}
     {:name      :institution/academicCalendar
-     :generator (constantly "https://to.some/random/location")}
+     :generator (gen/object {:year (fn [world]
+                                     (let [year ((gen/int 1995 2020) world)]
+                                       (format "%d-%d" year (inc year))))
+                                        ;:calendar (constantly "https://to.some/random/location")
+                             })}
     {:name      :institution/address
-     :generator (gen/format "%s %d\n%d %c%c  %s"
-                            (-> "nl/surf/demo_data_ooapi/street-names.txt" gen/lines-resource gen/one-of)
-                            (gen/int 1 200)
-                            (gen/int 1011 9999)
-                            (gen/char \A \Z)
-                            (gen/char \A \Z)
-                            (fn [{{city :institution/addressCity} :entity}] city))
+     :generator (gen/object {:street      (gen/format "%s %d"
+                                                      (-> "nl/surf/demo_data_ooapi/street-names.txt" gen/lines-resource gen/one-of)
+                                                      (gen/int 1 200))
+                             :city        (fn [{{city :institution/addressCity} :entity}] city)
+                             :zip         (gen/format "%d%c%c"
+                                                      (gen/int 1011 9999)
+                                                      (gen/char \A \Z)
+                                                      (gen/char \A \Z))
+                             :countryCode (constantly "NL")})
      :deps      [[:institution/addressCity]]}
     {:name      :institution/addressCity
      :generator (-> "nl/surf/demo_data_ooapi/city-names.txt" gen/lines-resource gen/one-of)}
     {:name      :institution/logo
      :generator (constantly "https://to.some/random/location")}
 
-    {:name        :educational-programme/id
-     :generator   (gen/int)
+    {:name        :educational-programme/educationalProgrammeId
+     :generator   id-generator
      :constraints [constraints/unique]}
     {:name      :educational-programme/name
      :deps      [[:educational-programme/fieldsOfStudy]]
@@ -118,6 +127,7 @@
                                             ((gen/int 1990 2018) world)
                                             ((gen/one-of [date-util/september date-util/february]) world)))}
     {:name      :educational-programme/termEndDate
+     :optional  true
      :generator (fn [{[start-date] :dep-vals :as world}]
                   (let [max-year   2018
                         start-year (inc (date-util/get start-date date-util/year))]
@@ -133,16 +143,12 @@
                     (* ((gen/int 2 8) world) 30)
                     (* ((gen/int-cubic 2 8) world) 30)))}
     {:name      :educational-programme/mainLanguage
-     :generator (gen/weighted-set {"NL-nl" 5
-                                   "GB-en" 1})}
+     :generator (gen/weighted {"NL-nl" 5
+                               "GB-en" 1})}
     {:name      :educational-programme/qualificationAwarded
      :deps      [[:educational-programme/levelOfQualification] [:educational-programme/name]]
      :generator (fn [{[level name] :dep-vals}]
                   (format "%s of %s" level name))}
-    {:name      :educational-programme/lengthOfProgramme
-     :deps      [[:educational-programme/ects]]
-     :generator (fn [{[ects] :dep-vals :as world}]
-                  (-> ects (/ 60) (* 12) int))}
     {:name      :educational-programme/levelOfQualification
      :deps      [[:service/courseLevels]]
      :generator (fn [{{[service] :service} :world :as world}]
@@ -163,7 +169,7 @@
     ;;;;;;;;;;;;;;;;;;;;
 
     {:name      :course-programme/refs
-     :deps      [[:course/id]  [:educational-programme/id]]
+     :deps      [[:course/courseId]  [:educational-programme/educationalProgrammeId]]
      :generator (world/pick-unique-refs [true false])}
     {:name      :course-programme/course
      :deps      [[:course-programme/refs]]
@@ -176,12 +182,12 @@
 
     ;;;;;;;;;;;;;;;;;;;;
 
-    {:name        :course/id
-     :generator   (gen/int)
+    {:name        :course/courseId
+     :generator   id-generator
      :constraints [constraints/unique]}
     {:name      :course/name
      ;; TODO: ensure that courses always have an educational-programme
-     :deps      [[[:course-programme/course :course/id] :course-programme/educational-programme :educational-programme/fieldsOfStudy]]
+     :deps      [[[:course-programme/course :course/courseId] :course-programme/educational-programme :educational-programme/fieldsOfStudy]]
      :generator (fn [{[fields] :dep-vals :as world}]
                   (let [g (gen/one-of-each (map programme-names-by-field-of-study fields))]
                     ((gen/format ((gen/one-of course-name-formats) world)
@@ -246,16 +252,16 @@
                                "okt-nov"    1
                                "nov-dec"    1})}
     {:name      :course/coordinator
-     :deps      [[:person/id]]
+     :deps      [[:person/personId]]
      :generator (world/pick-ref)}
 
     ;;;;;;;;;;;;;;;;;;;;
 
-    {:name        :course-offering/id
-     :generator   (gen/int)
+    {:name        :course-offering/courseOfferingId
+     :generator   id-generator
      :constraints [constraints/unique]}
     {:name      :course-offering/course
-     :deps      [[:course/id]]
+     :deps      [[:course/courseId]]
      :generator (world/pick-ref)}
     {:name      :course-offering/courseId
      :deps      [[:course-offering/course]]
@@ -281,7 +287,7 @@
 
     ;; Lecturer links people to courseOfferings, people can only teach a courseOffering once
     {:name      :lecturer/refs
-     :deps      [[:person/id] [:course-offering/id]]
+     :deps      [[:person/personId] [:course-offering/courseOfferingId]]
      :generator (world/pick-unique-refs)}
     {:name      :lecturer/person
      :deps      [[:lecturer/refs]]
@@ -294,8 +300,8 @@
 
     ;;;;;;;;;;;;;;;;;;;;
 
-    {:name        :person/id
-     :generator   (gen/int)
+    {:name        :person/personId
+     :generator   id-generator
      :constraints [constraints/unique]}
     {:name      :person/givenName
      :generator (-> "nl/surf/demo_data_ooapi/first-names.txt" gen/lines-resource gen/one-of)}
@@ -425,7 +431,8 @@
                                                                           {:href "/courses"}]}))}
    "/institution"            {:type       :institution
                               :singleton? true
-                              :attributes {:institution/address-city {:hidden? true}}
+                              :attributes {:institution/addressCity {:hidden? true}
+                                           :institution/domain      {:hidden? true}}
                               :pre        (fn [e _]
                                             (assoc e :_links {:self                   {:href "/institution"}
                                                               :educational-programmes {:href "/educational-programmes"}}))}
@@ -455,10 +462,22 @@
                                                               :lecturers             (map person-link (lecturers-for-course world id))
                                                               :courseOfferings       {:href (str "/course-offerings?course=" id)}
                                                               :educationalProgrammes (map (fn [programme]
-                                                                                            {:href (str "/educational-programmes/" (:educational-programme/id programme))})
+                                                                                            {:href (str "/educational-programmes/" (:educational-programme/educationalProgrammeId programme))})
                                                                                           (programmes-for-course world id))}))}})
 
 
 ;;(world/gen attributes {:service 1 :institution 1, :educational-programme 3, :course-programme 20 :course 15, :lecturer 30, :course-offering 30 :person 30})
 
 ;;(export/export (world/gen attributes {:service 1 :institution 1, :educational-programme 2, :course-programme 8 :course 5, :lecturer 20, :course-offering 10 :person 15}) export-conf)
+
+(def data
+  (binding [dgen/*rnd* (java.util.Random. 42)]
+    (export/export (world/gen attributes {:service               1
+                                          :institution           1
+                                          :educational-programme 2
+                                          :course-programme      8
+                                          :course                5
+                                          :lecturer              20
+                                          :course-offering       10
+                                          :person                15})
+                   export-conf)))
