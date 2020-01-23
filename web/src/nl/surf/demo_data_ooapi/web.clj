@@ -4,7 +4,7 @@
             [clojure.string :as s]
             [clojure.tools.logging :as log]
             [hiccup.core :as hiccup]
-            [nl.surf.demo-data-ooapi.ooapi :as ooapi]
+            [nl.surf.demo-data-ooapi.config :as ooapi]
             [nl.surf.demo-data.export :as export]
             [nl.surf.demo-data.world :as world]
             [nl.zeekat.ring-openapi-validator :as validator]
