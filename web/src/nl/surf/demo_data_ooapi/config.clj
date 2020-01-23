@@ -139,7 +139,7 @@
                          :address                {:generator ["object" :street :zip :city :countryCode]
                                                   :deps      ["institution/_street" "institution/_zip" "institution/city" "institution/_countryCode"]}
                          :_street_name           {:hidden    true
-                                                  :generator ["one-of-resource-lines" "nl/street-names.txt"]}
+                                                  :generator ["one-of-resource-lines" "nl/surf/demo_data_ooapi/street-names.txt"]}
                          :_house_number          {:hidden    true
                                                   :generator ["int" 1 200]}
                          :_street                {:hidden    true
@@ -155,7 +155,7 @@
                                                   :generator ["format" "%d%c%c"]
                                                   :deps      ["institution/_zip_digits" "institution/_zip_letter_1" "institution/_zip_letter_2"]}
                          :city                   {:hidden    true
-                                                  :generator ["one-of-resource-lines" "nl/city-names.txt"]}
+                                                  :generator ["one-of-resource-lines" "nl/surf/demo_data_ooapi/city-names.txt"]}
                          :_countryCode           {:hidden true
                                                   :value  "NL"}}}
 
@@ -163,7 +163,7 @@
             :refs       {:service {:deps ["service/serviceId"]}}
             :attributes {:educationalProgrammeId    {:generator   "id"
                                                      :constraints ["unique"]}
-                         :name                      {:generator ["one-of-keyed-resource" "nl/programme-names.yml"]
+                         :name                      {:generator ["one-of-keyed-resource" "nl/surf/demo_data_ooapi/programme-names.yml"]
                                                      :deps      ["educational-programme/fieldsOfStudy"]}
                          :description               {:generator "lorum-surf"}
                          :termStartDate             {:generator ["first-weekday-of" "monday"]
@@ -241,7 +241,7 @@
                                                                   "%s van de toekomst"
                                                                   "%s voor gevorderden"]]}
                          :_programmeName   {:hidden    true
-                                            :generator ["one-of-keyed-resource" "nl/programme-names.yml"]
+                                            :generator ["one-of-keyed-resource" "nl/surf/demo_data_ooapi/programme-names.yml"]
                                             :deps      ["course/_field"]}
                          :_field           {:hidden    true
                                             :generator "one-of"
