@@ -1,0 +1,984 @@
+{
+    "types": [
+        {
+            "name": "service",
+            "refs": {
+                "institution": {
+                    "deps": [
+                        "institution/institutionId"
+                    ]
+                }
+            },
+            "attributes": {
+                "serviceId": {
+                    "hidden": true,
+                    "generator": "id",
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "owner": {
+                    "deps": [
+                        [
+                            "service/institution",
+                            "institution/name"
+                        ]
+                    ]
+                },
+                "logo": {
+                    "value": "https://example.com/logo.png"
+                },
+                "specification": {
+                    "value": "https://example.com/specification"
+                },
+                "documentation": {
+                    "value": "https://example.com/documentation"
+                },
+                "courseLevels": {
+                    "value": [
+                        "Bachelor",
+                        "Master"
+                    ]
+                },
+                "roomTypes": {
+                    "value": [
+                        "General purpose",
+                        "Lecture hall",
+                        "PC lab"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "institution",
+            "attributes": {
+                "description": {
+                    "generator": "lorum-surf"
+                },
+                "academicCalendar": {
+                    "generator": [
+                        "object",
+                        "year"
+                    ],
+                    "deps": [
+                        "institution/_academicCalendarYear"
+                    ]
+                },
+                "_zip": {
+                    "hidden": true,
+                    "generator": [
+                        "format",
+                        "%d%c%c"
+                    ],
+                    "deps": [
+                        "institution/_zip_digits",
+                        "institution/_zip_letter_1",
+                        "institution/_zip_letter_2"
+                    ]
+                },
+                "_street": {
+                    "hidden": true,
+                    "generator": [
+                        "format",
+                        "%s %d"
+                    ],
+                    "deps": [
+                        "institution/_street_name",
+                        "institution/_house_number"
+                    ]
+                },
+                "institutionId": {
+                    "generator": "id",
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "address": {
+                    "generator": [
+                        "object",
+                        "street",
+                        "zip",
+                        "city",
+                        "countryCode"
+                    ],
+                    "deps": [
+                        "institution/_street",
+                        "institution/_zip",
+                        "institution/city",
+                        "institution/_countryCode"
+                    ]
+                },
+                "brin": {
+                    "generator": [
+                        "format",
+                        "%c%c%c%c"
+                    ],
+                    "deps": [
+                        "institution/_brin1",
+                        "institution/_brin2",
+                        "institution/_brin3",
+                        "institution/_brin4"
+                    ]
+                },
+                "_zip_digits": {
+                    "hidden": true,
+                    "generator": [
+                        "int",
+                        1000,
+                        9999
+                    ]
+                },
+                "logo": {
+                    "generator": [
+                        "format",
+                        "https://%s/images/logo.png"
+                    ],
+                    "deps": [
+                        "institution/domain"
+                    ]
+                },
+                "name": {
+                    "generator": [
+                        "format",
+                        "%s van %s"
+                    ],
+                    "deps": [
+                        "institution/_type",
+                        "institution/city"
+                    ]
+                },
+                "_house_number": {
+                    "hidden": true,
+                    "generator": [
+                        "int",
+                        1,
+                        200
+                    ]
+                },
+                "_brin2": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "0",
+                        "9"
+                    ]
+                },
+                "city": {
+                    "hidden": true,
+                    "generator": [
+                        "one-of-resource-lines",
+                        "nl/surf/demo_data_ooapi/city-names.txt"
+                    ]
+                },
+                "_type": {
+                    "hidden": true,
+                    "generator": [
+                        "one-of",
+                        [
+                            "Universiteit",
+                            "Hogeschool",
+                            "Academie"
+                        ]
+                    ]
+                },
+                "_brin4": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "A",
+                        "Z"
+                    ]
+                },
+                "_academicCalendarYear": {
+                    "hidden": true,
+                    "generator": [
+                        "format",
+                        "%d-%d"
+                    ],
+                    "deps": [
+                        "institution/_academicCalendarYear1",
+                        "institution/_academicCalendarYear2"
+                    ]
+                },
+                "_zip_letter_2": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "A",
+                        "Z"
+                    ]
+                },
+                "_academicCalendarYear1": {
+                    "hidden": true,
+                    "generator": [
+                        "int",
+                        1995,
+                        2020
+                    ]
+                },
+                "_domainBase": {
+                    "hidden": true,
+                    "generator": "sanitize",
+                    "deps": [
+                        "institution/name"
+                    ]
+                },
+                "_countryCode": {
+                    "hidden": true,
+                    "value": "NL"
+                },
+                "_brin1": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "0",
+                        "9"
+                    ]
+                },
+                "domain": {
+                    "hidden": true,
+                    "generator": [
+                        "format",
+                        "%s.nl"
+                    ],
+                    "deps": [
+                        "institution/_domainBase"
+                    ]
+                },
+                "_academicCalendarYear2": {
+                    "hidden": true,
+                    "generator": "inc",
+                    "deps": [
+                        "institution/_academicCalendarYear1"
+                    ]
+                },
+                "_street_name": {
+                    "hidden": true,
+                    "generator": [
+                        "one-of-resource-lines",
+                        "nl/surf/demo_data_ooapi/street-names.txt"
+                    ]
+                },
+                "_zip_letter_1": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "A",
+                        "Z"
+                    ]
+                },
+                "_brin3": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "A",
+                        "Z"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "educational-programme",
+            "refs": {
+                "service": {
+                    "deps": [
+                        "service/serviceId"
+                    ]
+                }
+            },
+            "attributes": {
+                "description": {
+                    "generator": "lorum-surf"
+                },
+                "educationalProgrammeId": {
+                    "generator": "id",
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "mainLanguage": {
+                    "generator": [
+                        "weighted",
+                        {
+                            "NL-nl": 5,
+                            "GB-en": 1
+                        }
+                    ]
+                },
+                "profileOfProgramme": {
+                    "generator": "lorum-surf"
+                },
+                "_termStartYearAfter": {
+                    "hidden": true,
+                    "generator": "inc",
+                    "deps": [
+                        "educational-programme/_termStartYear"
+                    ]
+                },
+                "fieldsOfStudy": {
+                    "generator": [
+                        "one-of",
+                        [
+                            "Economie",
+                            "Gezondheidszorg",
+                            "Gedrag & Maatschappij",
+                            "Landbouw & Natuurlijke omgeving",
+                            "Natuur",
+                            "Onderwijs",
+                            "Taal & Cultuur",
+                            "Recht",
+                            "Techniek",
+                            "Sectoroverstijgend"
+                        ]
+                    ]
+                },
+                "name": {
+                    "generator": [
+                        "one-of-keyed-resource",
+                        "nl/surf/demo_data_ooapi/programme-names.yml"
+                    ],
+                    "deps": [
+                        "educational-programme/fieldsOfStudy"
+                    ]
+                },
+                "_termStartYear": {
+                    "hidden": true,
+                    "generator": "int",
+                    "deps": [
+                        "educational-programme/_termMinYear",
+                        "educational-programme/_termMaxStartYear"
+                    ]
+                },
+                "programmeLearningOutcomes": {
+                    "generator": [
+                        "lorum-surf",
+                        "learningOutcomes"
+                    ]
+                },
+                "_termEndYear": {
+                    "hidden": true,
+                    "generator": "int",
+                    "deps": [
+                        "educational-programme/_termStartYearAfter",
+                        "educational-programme/_termMaxEndYear"
+                    ]
+                },
+                "modeOfStudy": {
+                    "generator": [
+                        "weighted",
+                        {
+                            "full-time": 5,
+                            "part-time": 2,
+                            "dual": 1,
+                            "e-learning": 2
+                        }
+                    ]
+                },
+                "_termMaxEndYear": {
+                    "hidden": true,
+                    "value": 2030
+                },
+                "levelOfQualification": {
+                    "deps": [
+                        [
+                            "educational-programme/service",
+                            "service/courseLevels"
+                        ]
+                    ],
+                    "generator": "one-of"
+                },
+                "ects": {
+                    "generator": "programme-ects",
+                    "deps": [
+                        "educational-programme/levelOfQualification"
+                    ]
+                },
+                "_termStartMonth": {
+                    "hidden": true,
+                    "generator": [
+                        "one-of",
+                        [
+                            "february",
+                            "september"
+                        ]
+                    ]
+                },
+                "termStartDate": {
+                    "generator": [
+                        "first-weekday-of",
+                        "monday"
+                    ],
+                    "deps": [
+                        "educational-programme/_termStartYear",
+                        "educational-programme/_termStartMonth"
+                    ]
+                },
+                "qualificationAwarded": {
+                    "deps": [
+                        "educational-programme/levelOfQualification",
+                        "educational-programme/name"
+                    ],
+                    "generator": [
+                        "format",
+                        "%s of %s"
+                    ]
+                },
+                "_termMinYear": {
+                    "hidden": true,
+                    "value": 1990
+                },
+                "_termMaxStartYear": {
+                    "hidden": true,
+                    "value": 2019
+                },
+                "_termEndMonth": {
+                    "hidden": true,
+                    "generator": [
+                        "one-of",
+                        [
+                            "january",
+                            "august"
+                        ]
+                    ]
+                },
+                "termEndDate": {
+                    "optional": true,
+                    "generator": "last-day-of",
+                    "deps": [
+                        "educational-programme/_termEndYear",
+                        "educational-programme/_termEndMonth"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "course-programme",
+            "refs": {
+                "_": {
+                    "unique": [
+                        true,
+                        false
+                    ],
+                    "deps": [
+                        "course/courseId",
+                        "educational-programme/educationalProgrammeId"
+                    ],
+                    "attributes": [
+                        "course",
+                        "educational-programme"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "course",
+            "refs": {
+                "service": {
+                    "hidden": true,
+                    "deps": [
+                        "service/serviceId"
+                    ]
+                },
+                "coordinator": {
+                    "deps": [
+                        "person/personId"
+                    ]
+                }
+            },
+            "attributes": {
+                "description": {
+                    "generator": "lorum-surf"
+                },
+                "mainLanguage": {
+                    "generator": [
+                        "weighted",
+                        {
+                            "NL-nl": 5,
+                            "GB-en": 1
+                        }
+                    ]
+                },
+                "requirements": {
+                    "optional": true,
+                    "generator": "course-requirements",
+                    "deps": [
+                        "course/name"
+                    ]
+                },
+                "schedule": {
+                    "generator": [
+                        "weighted",
+                        {
+                            "3e periode": 2,
+                            "sep-okt": 1,
+                            "nov-dec": 1,
+                            "4e periode": 2,
+                            "mrt-apr": 1,
+                            "apr-mei": 1,
+                            "2e periode": 2,
+                            "okt-nov": 1,
+                            "jan-feb": 1,
+                            "feb-mrt": 1,
+                            "mei-jun": 1,
+                            "1e periode": 2,
+                            "jun-jul": 1
+                        }
+                    ]
+                },
+                "format": {
+                    "generator": [
+                        "weighted-set",
+                        {
+                            "practicum": 1,
+                            "hoorcollege": 1
+                        }
+                    ]
+                },
+                "enrollment": {
+                    "generator": [
+                        "lorum-surf",
+                        "enrollment"
+                    ]
+                },
+                "_field": {
+                    "hidden": true,
+                    "generator": "one-of",
+                    "deps": [
+                        [
+                            [
+                                "course-programme/course",
+                                "course/courseId"
+                            ],
+                            "course-programme/educational-programme",
+                            "educational-programme/fieldsOfStudy"
+                        ]
+                    ]
+                },
+                "modeOfDelivery": {
+                    "generator": [
+                        "weighted",
+                        {
+                            "e-learning": 1,
+                            "face-to-face": 2,
+                            "class-room": 20
+                        }
+                    ]
+                },
+                "goals": {
+                    "generator": [
+                        "lorum-surf",
+                        "goals"
+                    ]
+                },
+                "exams": {
+                    "generator": [
+                        "lorum-surf",
+                        "exams"
+                    ]
+                },
+                "_nameFormat": {
+                    "hidden": true,
+                    "generator": [
+                        "one-of",
+                        [
+                            "Inleiding tot %s",
+                            "Geschiedenis van de %s",
+                            "Filosofie van %s",
+                            "Psychologie van de %s",
+                            "Wiskunde van de %s",
+                            "Macro %s",
+                            "Micro %s",
+                            "%s in de praktijk",
+                            "%s in de vorige eeuw",
+                            "%s van de toekomst",
+                            "%s voor gevorderden"
+                        ]
+                    ]
+                },
+                "_programmeName": {
+                    "hidden": true,
+                    "generator": [
+                        "one-of-keyed-resource",
+                        "nl/surf/demo_data_ooapi/programme-names.yml"
+                    ],
+                    "deps": [
+                        "course/_field"
+                    ]
+                },
+                "name": {
+                    "generator": "format",
+                    "deps": [
+                        "course/_nameFormat",
+                        "course/_programmeName"
+                    ]
+                },
+                "level": {
+                    "generator": "one-of",
+                    "deps": [
+                        [
+                            "course/service",
+                            "service/courseLevels"
+                        ]
+                    ]
+                },
+                "ects": {
+                    "generator": "course-ects"
+                },
+                "learningOutcomes": {
+                    "generator": [
+                        "lorum-surf",
+                        "learningOutcomes",
+                        1
+                    ]
+                },
+                "resources": {
+                    "generator": [
+                        "lorum-surf",
+                        "resources"
+                    ]
+                },
+                "courseId": {
+                    "generator": "id",
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "abbreviation": {
+                    "generator": "abbreviate",
+                    "deps": [
+                        "course/name"
+                    ],
+                    "constraints": [
+                        "unique"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "course-offering",
+            "refs": {
+                "course": {
+                    "deps": [
+                        "course/courseId"
+                    ]
+                }
+            },
+            "attributes": {
+                "courseOfferingId": {
+                    "generator": "id",
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "courseId": {
+                    "deps": [
+                        [
+                            "course-offering/course",
+                            "course/courseId"
+                        ]
+                    ]
+                },
+                "maxNumberStudents": {
+                    "generator": [
+                        "int-cubic",
+                        20,
+                        50
+                    ]
+                },
+                "currentNumberStudents": {
+                    "generator": [
+                        "int",
+                        10
+                    ],
+                    "deps": [
+                        "course-offering/maxNumberStudents"
+                    ]
+                },
+                "academicYear": {
+                    "generator": [
+                        "format",
+                        "%d-%d"
+                    ],
+                    "deps": [
+                        "course-offering/_academicYear1",
+                        "course-offering/_academicYear2"
+                    ]
+                },
+                "_academicYear1": {
+                    "hidden": true,
+                    "generator": [
+                        "int",
+                        1995,
+                        2020
+                    ]
+                },
+                "_academicYear2": {
+                    "hidden": true,
+                    "generator": "inc",
+                    "deps": [
+                        "course-offering/_academicYear1"
+                    ]
+                },
+                "period": {
+                    "generator": [
+                        "one-of",
+                        [
+                            "1e periode",
+                            "2e periode",
+                            "3e periode",
+                            "4e periode"
+                        ]
+                    ]
+                }
+            }
+        },
+        {
+            "name": "lecturer",
+            "refs": {
+                "_": {
+                    "unique": true,
+                    "deps": [
+                        "person/personId",
+                        "course-offering/courseOfferingId"
+                    ],
+                    "attributes": [
+                        "person",
+                        "courseOffering"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "person",
+            "refs": {
+                "institution": {
+                    "deps": [
+                        "institution/institutionId"
+                    ]
+                }
+            },
+            "attributes": {
+                "affiliations": {
+                    "value": [
+                        "employee"
+                    ]
+                },
+                "_mobileNumber": {
+                    "hidden": true,
+                    "generator": [
+                        "int",
+                        0,
+                        99999999
+                    ],
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "personId": {
+                    "generator": "id",
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "_mailName": {
+                    "hidden": true,
+                    "generator": "sanitize",
+                    "deps": [
+                        "person/displayName"
+                    ],
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "displayName": {
+                    "generator": "join",
+                    "deps": [
+                        "person/givenName",
+                        "person/surnamePrefix",
+                        "person/surname"
+                    ]
+                },
+                "mail": {
+                    "generator": [
+                        "format",
+                        "%s@%s"
+                    ],
+                    "deps": [
+                        "person/_mailName",
+                        [
+                            "person/institution",
+                            "institution/domain"
+                        ]
+                    ]
+                },
+                "surname": {
+                    "generator": [
+                        "one-of-resource-lines",
+                        "nl/surf/demo_data_ooapi/last-names.txt"
+                    ]
+                },
+                "_telephoneNumber": {
+                    "hidden": true,
+                    "generator": [
+                        "int",
+                        100000000,
+                        999999999
+                    ],
+                    "constraints": [
+                        "unique"
+                    ]
+                },
+                "_office1": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "A",
+                        "Z"
+                    ]
+                },
+                "title": {
+                    "optional": true,
+                    "generator": [
+                        "weighted",
+                        {
+                            "": 50,
+                            "kand.": 2,
+                            "bacc.": 2,
+                            "prof.": 4,
+                            "dr.": 4,
+                            "drs.": 4,
+                            "ir.": 4,
+                            "mr.": 4,
+                            "ing.": 5
+                        }
+                    ]
+                },
+                "_office6": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "0",
+                        "9"
+                    ]
+                },
+                "telephoneNumber": {
+                    "generator": [
+                        "format",
+                        "0%09d"
+                    ],
+                    "deps": [
+                        "person/_telephoneNumber"
+                    ]
+                },
+                "dateOfBirth": {
+                    "generator": [
+                        "date",
+                        "1990-01-01",
+                        "2005-01-01"
+                    ]
+                },
+                "office": {
+                    "generator": [
+                        "format",
+                        "%c%c%c %c.%c%c"
+                    ],
+                    "deps": [
+                        "person/_office1",
+                        "person/_office2",
+                        "person/_office3",
+                        "person/_office4",
+                        "person/_office5",
+                        "person/_office6"
+                    ]
+                },
+                "_office3": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "A",
+                        "Z"
+                    ]
+                },
+                "photoOfficial": {
+                    "value": "https://docs.atlassian.com/aui/8.4.1/docs/images/avatar-person.svg"
+                },
+                "surnamePrefix": {
+                    "optional": true,
+                    "generator": [
+                        "weighted",
+                        {
+                            "": 50,
+                            "van de": 3,
+                            "bij": 1,
+                            "op de": 1,
+                            "van 't": 2,
+                            "van het": 3,
+                            "bij het": 1,
+                            "aan het": 1,
+                            "aan de": 1,
+                            "op het": 1,
+                            "op 't": 1,
+                            "bij de": 1,
+                            "van": 3,
+                            "in de": 2,
+                            "in 't": 2
+                        }
+                    ]
+                },
+                "photoSocial": {
+                    "value": "https://docs.atlassian.com/aui/8.4.1/docs/images/avatar-person.svg"
+                },
+                "givenName": {
+                    "generator": [
+                        "one-of-resource-lines",
+                        "nl/surf/demo_data_ooapi/first-names.txt"
+                    ]
+                },
+                "_office5": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "0",
+                        "9"
+                    ]
+                },
+                "gender": {
+                    "generator": [
+                        "weighted",
+                        {
+                            "M": 46,
+                            "F": 50,
+                            "X": 2,
+                            "U": 2
+                        }
+                    ]
+                },
+                "_office2": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "A",
+                        "Z"
+                    ]
+                },
+                "mobileNumber": {
+                    "generator": [
+                        "format",
+                        "06%08d"
+                    ],
+                    "deps": [
+                        "person/_mobileNumber"
+                    ]
+                },
+                "_office4": {
+                    "hidden": true,
+                    "generator": [
+                        "char",
+                        "0",
+                        "9"
+                    ]
+                }
+            }
+        }
+    ]
+}
