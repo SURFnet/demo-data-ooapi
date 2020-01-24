@@ -1,6 +1,6 @@
 *~
-web/checkouts
-web/.nrepl-port
-web/target
-web/log
-web/.lein-*
+/checkouts
+/.nrepl-port
+/target
+/log
+/.lein-*
