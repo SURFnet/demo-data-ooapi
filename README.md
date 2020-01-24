@@ -5,17 +5,17 @@ Generates OOAPI data and serves it as JSON or HTML over HTTP.
 # Requirements:
 
    - Get [leiningen](https://leiningen.org/)
+   - Clone this repo
+   - Clone https://github.com/zeekat/surf-demodata
    - Install the surf demo-data jar:
 ```
-   git clone https://github.com/zeekat/surf-demodata.git
    cd surf-demodata
    lein install
 ```
    - Run this repo
 ```
-   git clone https://github.com/zeekat/surf-demodata-ooapi
    cd surf-demodata-ooapi
-   PORT=8080 HOST=0.0.0.0 lein run
+   PORT=8080 HOST=0.0.0.0 SEED=42 lein run
 ```
    visit http://0.0.0.0:8080/?html=1 for the html version or
    http://0.0.0.0:8080/ for the JSON API
