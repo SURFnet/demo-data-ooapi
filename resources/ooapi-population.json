@@ -1,0 +1,10 @@
+{
+    "service": 1,
+    "institution": 1,
+    "educational-programme": 2,
+    "course-programme": 8,
+    "course": 5,
+    "lecturer": 20,
+    "course-offering": 10,
+    "person": 15
+}
