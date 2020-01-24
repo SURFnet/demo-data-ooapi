@@ -44,21 +44,6 @@
   (fn course-ects [world]
     (int (- 60 (* 2.5 ((gen/int-cubic 1 24) world))))))
 
-;; TODO move to demo-data repo
-(defmethod config/generator "object" [_]
-  (fn object [world & keys-n-args]
-    (when-not (even? (count keys-n-args))
-      (ex-info "Expected even amount of arguments" {:args keys-n-args}))
-    (let [n (/ (count keys-n-args) 2)]
-      (apply hash-map (mapcat (fn [k v] [k v])
-                              (take n keys-n-args)
-                              (drop n keys-n-args))))))
-
-;; TODO move to demo-data repo
-(defmethod config/generator "join" [_]
-  (fn join [world & xs]
-    (->> xs (filter identity) (s/join " "))))
-
 (defmethod config/generator "date" [_]
   (fn date [world lo hi]
     (let [lo (date-util/->msecs-since-epoch (date-util/parse-date lo))
@@ -87,14 +72,10 @@
                               seq)]
         ((gen/one-of courses) world)))))
 
-(def config
-  (json/decode-stream (io/reader (io/resource "ooapi-schema.json"))
-                      keyword))
-
 (defn lecturers-for-offering
   [world course-offering-id]
   (keep (fn [{[_ courseOfferingId] :lecturer/courseOffering
-              person :lecturer/person}]
+              person               :lecturer/person}]
           (when (= course-offering-id courseOfferingId)
             (world/get-entity world person)))
         (:lecturer world)))
@@ -115,8 +96,8 @@
 
 (defn programmes-for-course
   [world course-id]
-  (keep (fn [{[_ courseId]    :course-programme/course
-              programme :course-programme/educational-programme}]
+  (keep (fn [{[_ courseId] :course-programme/course
+              programme    :course-programme/educational-programme}]
           (when (= course-id courseId)
             (world/get-entity world programme)))
         (:course-programme world)))
@@ -178,16 +159,24 @@
                                                                                           (programmes-for-course world courseId))}))}})
 
 (def data
-  (binding [dgen/*rnd* (java.util.Random. 42)]
-    (-> config
-        (config/load)
-        (world/gen {:service               1
-                    :institution           1
-                    :educational-programme 2
-                    :course-programme      8
-                    :course                5
-                    :lecturer              20
-                    :course-offering       10
-                    :person                15})
-        (export/export
-         export-conf))))
+  nil)
+
+(defn generate!
+  [seed]
+  (println (str "Generating data with seed " seed))
+  (alter-var-root #'data
+                  (fn [_]
+                    (binding [dgen/*rnd* (java.util.Random. seed)]
+                      (-> (json/decode-stream (io/reader (io/resource "ooapi-schema.json"))
+                                              keyword)
+                          (config/load)
+                          (world/gen {:service               1
+                                      :institution           1
+                                      :educational-programme 2
+                                      :course-programme      8
+                                      :course                5
+                                      :lecturer              20
+                                      :course-offering       10
+                                      :person                15})
+                          (export/export export-conf))))))
+

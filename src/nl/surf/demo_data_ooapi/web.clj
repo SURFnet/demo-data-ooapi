@@ -173,6 +173,7 @@
   (stop!)
   (let [host (get (System/getenv) "HOST")
         port (Integer/parseInt (get (System/getenv) "PORT" "8080"))]
+    (println (str "Starting webserver at " host ":" port))
     (reset! server-atom
             (run-jetty (-> #'app
                            wrap-pagination
