@@ -20,10 +20,13 @@ Generates OOAPI data and serves it as JSON or HTML over HTTP.
    visit http://0.0.0.0:8080/?html=1 for the html version or
    http://0.0.0.0:8080/ for the JSON API
 
-   You can edit [resources/ooapi-schema.json] to configure the entity
-   schema, [resources/ooapi-population.json] configures the amounts of
-   entities generated.
+   You can edit
+   [resources/ooapi-schema.json](resources/ooapi-schema.json) to
+   configure the entity schema,
+   [resources/ooapi-population.json](resources/ooapi-population.json)
+   configures the amounts of entities generated.
 
    Custom generators for OOAPI are defined in
-   [src/nl/surf/demo_data_ooapi/config.clj].
+   [src/nl/surf/demo_data_ooapi/config.clj](src/nl/surf/demo_data_ooapi/config.clj)
+
 
