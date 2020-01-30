@@ -19,7 +19,6 @@
             [clojure.java.io :as io]
             [clojure.string :as s]
             [nl.surf.demo-data.config :as config]
-            [nl.surf.demo-data.date-util :as date-util]
             [nl.surf.demo-data.export :as export]
             [nl.surf.demo-data.generators :as gen]
             [nl.surf.demo-data.world :as world]
@@ -58,12 +57,6 @@
 (defmethod config/generator "course-ects" [_]
   (fn course-ects [world]
     (int (- 60 (* 2.5 ((gen/int-cubic 1 24) world))))))
-
-(defmethod config/generator "date" [_]
-  (fn date [world lo hi]
-    (let [lo (date-util/->msecs-since-epoch (date-util/parse-date lo))
-          hi (date-util/->msecs-since-epoch (date-util/parse-date hi))]
-      (date-util/<-msecs-since-epoch ((gen/int lo hi) world)))))
 
 (defmethod config/generator "id" [_]
   (fn id [world]
