@@ -4,6 +4,7 @@
             "name": "service",
             "refs": {
                 "institution": {
+                    "hidden": false,
                     "deps": [
                         "institution/institutionId"
                     ]
@@ -281,6 +282,7 @@
             "name": "educational-programme",
             "refs": {
                 "service": {
+                    "hidden": false,
                     "deps": [
                         "service/serviceId"
                     ]
@@ -455,6 +457,7 @@
             "name": "course-programme",
             "refs": {
                 "_": {
+                    "hidden": false,
                     "unique": [
                         true,
                         false
@@ -474,12 +477,13 @@
             "name": "course",
             "refs": {
                 "service": {
-                    "hidden": true,
+                    "hidden": false,
                     "deps": [
                         "service/serviceId"
                     ]
                 },
                 "coordinator": {
+                    "hidden": false,
                     "deps": [
                         "person/personId"
                     ]
@@ -658,6 +662,7 @@
             "name": "course-offering",
             "refs": {
                 "course": {
+                    "hidden": false,
                     "deps": [
                         "course/courseId"
                     ]
@@ -736,6 +741,7 @@
             "name": "lecturer",
             "refs": {
                 "_": {
+                    "hidden": false,
                     "unique": true,
                     "deps": [
                         "person/personId",
@@ -752,6 +758,7 @@
             "name": "person",
             "refs": {
                 "institution": {
+                    "hidden": false,
                     "deps": [
                         "institution/institutionId"
                     ]
