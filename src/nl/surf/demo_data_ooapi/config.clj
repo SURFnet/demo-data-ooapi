@@ -169,19 +169,16 @@
 (def data
   nil)
 
-(defn load-json
-  [path]
-  (json/decode-stream (io/reader (io/resource path))
-                                              keyword))
-
 (defn generate!
   [seed]
   (println (str "Generating data with seed " seed))
   (alter-var-root #'data
                   (fn [_]
                     (binding [dgen/*rnd* (java.util.Random. seed)]
-                      (-> (load-json "ooapi-schema.json")
-                          (config/load)
+                      (-> "ooapi-schema.json"
+                          (io/resource)
+                          (slurp)
+                          (config/load-json)
                           (world/gen (load-json "ooapi-population.json"))
                           (export/export export-conf))))))
 
