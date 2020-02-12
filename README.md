@@ -1,6 +1,32 @@
 # SURF DemoData for OOAPI
 
-Generates OOAPI data and serves it as JSON or HTML over HTTP.
+Generate OOAPI data and serve it as JSON or HTML over HTTP.
+
+This codebase uses the
+[surf-demodata](https://github.com/zeekat/surf-demodata) library to
+generate entities according to a subset of
+[the OOAPI specification](https://github.com/open-education-api/specification).
+
+## Code organization
+
+The entity schema configuration is provided as a demo-data schema in
+[resources/ooapi-schema.json](resources/ooapi-schema.json).
+
+The schema uses a number of custom generators defined in
+[src/nl/surf/demo_data_ooapi/config.clj](src/nl/surf/demo_data_ooapi/config.clj#L44),
+which also contains [an export
+config](src/nl/surf/demo_data_ooapi/config.clj#L118) to map entities
+to web resources and link related entities.
+
+The [resources/ooapi-population.json](resources/ooapi-population.json)
+file configures how many entities of each type will be generated.
+
+The HTTP server and middleware serving the endpoints is set up in
+[src/nl/surf/demo_data_ooapi/web.clj](src/nl/surf/demo_data_ooapi/web.clj).
+
+Also provided is [a Dockerfile](Dockerfile) for running the service
+without additional local dependencies. See [Building and running
+docker images](#building-and-running-docker-images)
 
 # Local development
 
@@ -26,14 +52,6 @@ PORT=8080 HOST=0.0.0.0 SEED=42 lein run
 visit http://0.0.0.0:8080/?html=1 for the html version or http://0.0.0.0:8080/
 for the JSON API.
 
-You can edit [resources/ooapi-schema.json](resources/ooapi-schema.json) to
-configure the entity schema,
-[resources/ooapi-population.json](resources/ooapi-population.json) configures
-the amounts of entities generated.
-
-Custom generators for OOAPI are defined in
-[src/nl/surf/demo_data_ooapi/config.clj](src/nl/surf/demo_data_ooapi/config.clj)
-
 # Building and running docker images
 
 ## Build docker image
@@ -42,11 +60,14 @@ Custom generators for OOAPI are defined in
 docker build . -t ooapi-demo
 ```
 
-## Run server from docker
+## Run the server from docker
 
 ```
-dokcer run -eSEED=42 -ePORT=8080 -eHOST=0.0.0.0 -p8080:8080 -it ooapi-demo
+docker run -eSEED=42 -ePORT=8080 -eHOST=0.0.0.0 -p8080:8080 -it ooapi-demo
 ```
+
+visit http://0.0.0.0:8080/?html=1 for the html version or http://0.0.0.0:8080/
+for the JSON API.
 
 ## License
 

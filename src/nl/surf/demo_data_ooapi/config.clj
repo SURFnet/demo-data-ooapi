@@ -116,6 +116,8 @@
    :title displayName})
 
 (def export-conf
+  "Map resource addresses to entity types, with pre-processing to
+  insert links according to relations between entities."
   {"/"                       {:type       :service
                               :singleton? true
                               :attributes {:service/institution {:hidden? true}}
@@ -148,11 +150,7 @@
    "/persons"                {:type       :person
                               :attributes {:person/institution {:hidden? true}}
                               :pre        (fn [{:person/keys [personId displayName] :as e} _]
-                                            (assoc e :_links {:self {:href (str "/persons/" personId)}}
-                                        ; link to courses not
-                                        ; implemented because that
-                                        ; only supports students
-                                                   ))}
+                                            (assoc e :_links {:self {:href (str "/persons/" personId)}}))}
    "/courses"                {:type       :course
                               :attributes {:course/coordinator {:hidden? true}
                                            :course/service     {:hidden? true}}
