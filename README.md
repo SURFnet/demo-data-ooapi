@@ -2,6 +2,8 @@
 
 Generates OOAPI data and serves it as JSON or HTML over HTTP.
 
+# Local development
+
 ## Requirements
 
 - Get [leiningen](https://leiningen.org/)
@@ -15,8 +17,6 @@ lein install
 ```
 
 ## Usage
-
-Run this repo:
 
 ```
 cd surf-demodata-ooapi
@@ -33,6 +33,20 @@ the amounts of entities generated.
 
 Custom generators for OOAPI are defined in
 [src/nl/surf/demo_data_ooapi/config.clj](src/nl/surf/demo_data_ooapi/config.clj)
+
+# Building and running docker images
+
+## Build docker image
+
+```
+docker build . -t ooapi-demo
+```
+
+## Run server from docker
+
+```
+dokcer run -eSEED=42 -ePORT=8080 -eHOST=0.0.0.0 -p8080:8080 -it ooapi-demo
+```
 
 ## License
 

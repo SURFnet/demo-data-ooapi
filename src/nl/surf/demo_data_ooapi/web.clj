@@ -20,6 +20,7 @@
             [clojure.tools.logging :as log]
             [hiccup.core :as hiccup]
             [nl.surf.demo-data-ooapi.config :as ooapi]
+            [nl.surf.demo-data-ooapi.env :as env]
             [nl.surf.demo-data.export :as export]
             [nl.surf.demo-data.world :as world]
             [nl.zeekat.ring-openapi-validator :as validator]
@@ -187,8 +188,8 @@
 
 (defn start! []
   (stop!)
-  (let [host (get (System/getenv) "HOST")
-        port (Integer/parseInt (get (System/getenv) "PORT" "8080"))]
+  (let [host (env/get "HOST" "0.0.0.0")
+        port (Integer/parseInt (env/get "PORT" "8080"))]
     (println (str "Starting webserver at " host ":" port))
     (reset! server-atom
             (run-jetty (-> #'app
