@@ -179,5 +179,5 @@
                           (io/resource)
                           (slurp)
                           (config/load-json)
-                          (world/gen "ooapi-population.json")
+                          (world/gen (json/parse-string (slurp (io/resource "ooapi-population.json")) keyword))
                           (export/export export-conf))))))
