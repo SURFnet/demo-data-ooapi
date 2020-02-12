@@ -13,33 +13,33 @@
             :body
             {:_embedded  {:items [{:name "g"} {:name "h"} {:name "i"}]}
              :_links
-             {:self {:href "/foo?pageSize=3&pageNumber=2"}
-              :prev {:href "/foo?pageSize=3&pageNumber=1"}
-              :next {:href "/foo?pageSize=3&pageNumber=3"}}
+             {:self {:href "/foo?pageSize=3&pageNumber=3"}
+              :prev {:href "/foo?pageSize=3&pageNumber=2"}
+              :next {:href "/foo?pageSize=3&pageNumber=4"}}
              :pageSize   3
-             :pageNumber 2}}
+             :pageNumber 3}}
            (handler {:uri "/foo" :params {"pageSize"   3
-                                          "pageNumber" 2}})))
+                                          "pageNumber" 3}})))
 
     (is (= {:status 200
             :body
             {:_embedded  {:items [{:name "a"} {:name "b"} {:name "c"}]}
              :_links
-             {:self {:href "/foo?pageSize=3&pageNumber=0"}
-              :next {:href "/foo?pageSize=3&pageNumber=1"}}
+             {:self {:href "/foo?pageSize=3&pageNumber=1"}
+              :next {:href "/foo?pageSize=3&pageNumber=2"}}
              :pageSize   3
-             :pageNumber 0}}
+             :pageNumber 1}}
            (handler {:uri "/foo" :params {"pageSize"   3
-                                          "pageNumber" 0}})))
+                                          "pageNumber" 1}})))
 
     (is (= {:status 200
             :body
             {:_embedded  {:items [{:name "m"}]}
              :_links
-             {:self {:href "/foo?pageSize=3&pageNumber=4"}
-              :prev {:href "/foo?pageSize=3&pageNumber=3"}}
+             {:self {:href "/foo?pageSize=3&pageNumber=5"}
+              :prev {:href "/foo?pageSize=3&pageNumber=4"}}
              :pageSize   3
-             :pageNumber 4}}
+             :pageNumber 5}}
            (handler {:uri "/foo" :params {"pageSize"   3
-                                          "pageNumber" 4}})))))
+                                          "pageNumber" 5}})))))
 
