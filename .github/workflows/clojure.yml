@@ -1,0 +1,28 @@
+name: Clojure CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v1
+
+    - name: Checkout lib repo
+      uses: actions/checkout@v2
+      with:
+        repository: zeekat/surf-demodata
+        path: demodata-lib
+
+    - name: Install lib
+      run: lein install
+      working-directory: demodata-lib
+
+    - name: Install dependencies
+      run: lein deps
+
+    - name: Run tests
+      run: lein test
