@@ -7,6 +7,16 @@ This codebase uses the
 generate entities according to a subset of
 [the OOAPI specification](https://github.com/open-education-api/specification).
 
+## Getting started
+The easiest way to get started is by building the Docker image and running it:
+- Get [docker](https://docs.docker.com/get-docker/).
+- Clone this repo and navigate to it.
+- Run `docker build . -t ooapi-server:latest`. This will build the docker image on your computer.
+- Run `docker run -e SEED=42 -e PORT=8080 -e HOST=0.0.0.0 -p 8080:8080 ooapi-server:latest`
+
+visit http://0.0.0.0:8080/?html=1 for the html version or http://0.0.0.0:8080/
+for the JSON API.
+
 ## Code organization
 
 The entity schema configuration is provided as a demo-data schema in
@@ -30,40 +40,14 @@ docker images](#building-and-running-docker-images)
 
 # Local development
 
-## Requirements
+## Usage
 
 - Get [leiningen](https://leiningen.org/)
 - Clone this repo
-- Clone https://github.com/zeekat/surf-demodata
-- Install the surf demo-data jar:
-
-```
-cd surf-demodata
-lein install
-```
-
-## Usage
 
 ```
 cd surf-demodata-ooapi
 PORT=8080 HOST=0.0.0.0 SEED=42 lein run
-```
-
-visit http://0.0.0.0:8080/?html=1 for the html version or http://0.0.0.0:8080/
-for the JSON API.
-
-# Building and running docker images
-
-## Build docker image
-
-```
-docker build . -t ooapi-demo
-```
-
-## Run the server from docker
-
-```
-docker run -eSEED=42 -ePORT=8080 -eHOST=0.0.0.0 -p8080:8080 -it ooapi-demo
 ```
 
 visit http://0.0.0.0:8080/?html=1 for the html version or http://0.0.0.0:8080/
