@@ -9,6 +9,9 @@ MAINTAINER SURF <edu-beheer@surfnet.nl>
 
 COPY --from=builder /usr/src/app/target/demo-data-server-standalone.jar .
 
+COPY production.logback.xml /
+ENV JDK_JAVA_OPTIONS="-Dlogback.configurationFile=production.logback.xml"
+
 ENV HOST=$HOST
 ENV PORT=$PORT
 ENV SEED=$SEED
